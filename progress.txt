@@ -10,3 +10,39 @@ OpenAI / Azure OpenAI RCA
         ↓
 Agent Recommendations
 
+## phase-2
+
+do we have to?
+
+Raw S4
+
+Material
+Plant
+ReqQty
+ReqWeek
+
+↓
+
+Standard
+
+product
+location
+period
+quantity
+
+
+Raw IBP
+
+PRDID
+LOCID
+PERIODID
+DEMANDQTY
+
+↓
+
+Standard
+
+product
+location
+period
+quantity
