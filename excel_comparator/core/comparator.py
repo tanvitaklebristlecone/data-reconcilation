@@ -4,8 +4,8 @@ from typing import Any
 
 import pandas as pd
 
-from core.mapper import ColumnMapper
-from utils.helpers import build_summary, compute_delta, normalise_value
+from excel_comparator.core.mapper import ColumnMapper
+from excel_comparator.utils.helpers import build_summary, compute_delta, normalise_value
 
 
 class ExcelComparator:

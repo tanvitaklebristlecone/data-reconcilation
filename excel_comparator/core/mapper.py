@@ -5,8 +5,7 @@ from typing import Any
 
 import pandas as pd
 
-from utils.helpers import build_composite_key
-
+from excel_comparator.utils.helpers import build_composite_key
 
 @dataclass
 class MappedField:
