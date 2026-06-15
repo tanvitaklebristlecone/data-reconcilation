@@ -6,12 +6,13 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from core.auto_mapper import auto_map_columns
-from core.comparator import ExcelComparator
-from core.loader import load_excel
-from core.mapper import ColumnMapper
-from core.writer import write_annotated_excel
-from utils.helpers import classify_remark, get_output_filename
+from excel_comparator.core.auto_mapper import auto_map_columns
+from excel_comparator.core.comparator import ExcelComparator
+from excel_comparator.core.loader import load_excel
+from excel_comparator.core.mapper import ColumnMapper
+from excel_comparator.core.writer import write_annotated_excel
+from excel_comparator.utils.helpers import classify_remark, get_output_filename
+from API_conn.services.reconcilation_service import ReconciliationService
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(layout="wide", page_icon="📊", page_title="DataSync Comparator")
@@ -94,46 +95,129 @@ st.caption(
 # STEP 1 — UPLOAD
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("---")
-st.subheader("📂 Step 1 — Upload Files")
+st.subheader("📂 Step 1 — Select Data Source")
 
-col_src, col_tgt = st.columns(2)
+data_mode = st.radio(
+    "Data Source",
+    ["Excel Upload", "SAP APIs"],
+    horizontal=True,
+)
+
 source_payload = None
 target_payload = None
 
-with col_src:
-    src_file = st.file_uploader(
-        "Source File (.xlsx / .xls)", type=["xlsx", "xls"], key="src_upload"
-    )
-    if src_file:
-        try:
-            source_payload = _load_file(src_file, "src_sheet")
-            st.success(
-                f"✅ **{source_payload['name']}** — "
-                f"{source_payload['row_count']:,} rows × {source_payload['col_count']} cols"
-            )
-            with st.expander("👁️ Preview Source (top 5 rows)"):
-                st.dataframe(_safe_df(source_payload["df"].head(5)), use_container_width=True)
-        except ValueError as exc:
-            st.error(str(exc))
+# =====================================================
+# EXCEL MODE
+# =====================================================
+if data_mode == "Excel Upload":
 
-with col_tgt:
-    tgt_file = st.file_uploader(
-        "Target File — IBP (.xlsx / .xls)", type=["xlsx", "xls"], key="tgt_upload"
-    )
-    if tgt_file:
-        try:
-            target_payload = _load_file(tgt_file, "tgt_sheet")
-            st.success(
-                f"✅ **{target_payload['name']}** — "
-                f"{target_payload['row_count']:,} rows × {target_payload['col_count']} cols"
-            )
-            with st.expander("👁️ Preview Target (top 5 rows)"):
-                st.dataframe(_safe_df(target_payload["df"].head(5)), use_container_width=True)
-        except ValueError as exc:
-            st.error(str(exc))
-        except PermissionError:
-            st.error("Please close the target file and retry.")
+    col_src, col_tgt = st.columns(2)
 
+    with col_src:
+        src_file = st.file_uploader(
+            "Source File (.xlsx / .xls)",
+            type=["xlsx", "xls"],
+            key="src_upload",
+        )
+
+        if src_file:
+            try:
+                source_payload = _load_file(src_file, "src_sheet")
+
+                st.success(
+                    f"✅ {source_payload['name']} — "
+                    f"{source_payload['row_count']:,} rows × "
+                    f"{source_payload['col_count']} cols"
+                )
+
+                with st.expander("👁️ Preview Source"):
+                    st.dataframe(
+                        _safe_df(source_payload["df"].head(5)),
+                        use_container_width=True,
+                    )
+
+            except ValueError as exc:
+                st.error(str(exc))
+
+    with col_tgt:
+        tgt_file = st.file_uploader(
+            "Target File — IBP (.xlsx / .xls)",
+            type=["xlsx", "xls"],
+            key="tgt_upload",
+        )
+
+        if tgt_file:
+            try:
+                target_payload = _load_file(tgt_file, "tgt_sheet")
+
+                st.success(
+                    f"✅ {target_payload['name']} — "
+                    f"{target_payload['row_count']:,} rows × "
+                    f"{target_payload['col_count']} cols"
+                )
+
+                with st.expander("👁️ Preview Target"):
+                    st.dataframe(
+                        _safe_df(target_payload["df"].head(5)),
+                        use_container_width=True,
+                    )
+
+            except ValueError as exc:
+                st.error(str(exc))
+
+            except PermissionError:
+                st.error("Please close the target file and retry.")
+
+
+# =====================================================
+# SAP MODE
+# =====================================================
+else:
+
+    if st.button("🔄 Fetch From SAP"):
+
+        try:
+            service = ReconciliationService()
+
+            source_df = service.get_source_data()
+            target_df = service.get_target_data()
+
+            source_payload = {
+                "name": "S4 API",
+                "df": source_df,
+                "row_count": len(source_df),
+                "col_count": len(source_df.columns),
+            }
+
+            target_payload = {
+                "name": "IBP API",
+                "df": target_df,
+                "row_count": len(target_df),
+                "col_count": len(target_df.columns),
+            }
+
+            st.success(
+                f"✅ S/4 Data Loaded ({len(source_df):,} rows)"
+            )
+
+            st.success(
+                f"✅ IBP Data Loaded ({len(target_df):,} rows)"
+            )
+
+            with st.expander("👁️ Preview S/4 Data"):
+                st.dataframe(
+                    source_df.head(5),
+                    use_container_width=True,
+                )
+
+            with st.expander("👁️ Preview IBP Data"):
+                st.dataframe(
+                    target_df.head(5),
+                    use_container_width=True,
+                )
+
+        except Exception as e:
+            st.error(f"SAP Connection Failed: {e}")
 # ══════════════════════════════════════════════════════════════════════════════
 # STEP 2 — AUTO-MAPPING + RUN (only when both files are ready)
 # ══════════════════════════════════════════════════════════════════════════════

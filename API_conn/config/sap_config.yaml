@@ -1,0 +1,13 @@
+s4:
+  enabled: false
+  base_url: ""
+  service: "API_SALES_ORDER_SRV"
+  username: ""
+  password: ""
+
+ibp:
+  enabled: false
+  base_url: ""
+  service: "/IBP/PLANNING_DATA_API_SRV"
+  username: ""
+  password: ""
