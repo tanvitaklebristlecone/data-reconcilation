@@ -1,4 +1,4 @@
-from base_connector import SAPConnector
+from API_conn.connectors.base_connector import SAPConnector
 import pandas as pd
 
 class IBPDemandConnector(SAPConnector):

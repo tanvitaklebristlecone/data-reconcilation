@@ -1,5 +1,5 @@
-from connectors.s4_connector import S4SalesOrderConnector
-from connectors.ibp_connector import IBPDemandConnector
+from API_conn.connectors.s4_connector import S4SalesOrderConnector
+from API_conn.connectors.ibp_connector import IBPDemandConnector
 
 
 class ReconciliationService:
