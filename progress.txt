@@ -1,0 +1,12 @@
+## phase-1
+
+Excel Upload
+        ↓
+SAP API Fetch
+        ↓
+Current Reconciliation Engine
+        ↓
+OpenAI / Azure OpenAI RCA
+        ↓
+Agent Recommendations
+
