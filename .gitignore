@@ -1,2 +1,1 @@
-API_conn/config/sap_config.yaml
-API_conn/config/sap_config_example.yaml
+API_conn/config/*.yaml
